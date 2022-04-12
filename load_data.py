@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import cv2
 
 ARABIC = 'arabic'
 KANNADA = 'kannada'
@@ -20,12 +21,17 @@ class Dataset:
         self.y_test = y_test
         self.language = language
 
+        self.x_train = self._equalize(self.x_train)
+        self.x_test = self._equalize(self.x_test)
+
         self.x_train = self._flatten(self.x_train)
         self.x_test = self._flatten(self.x_test)
 
         self.y_train = self._add_language_to_label(y_train)
         self.y_test = self._add_language_to_label(y_test)
-        x=1
+
+    def _equalize(self, x):
+        return np.array([cv2.equalizeHist(image) for image in x])
 
     @staticmethod
     def _flatten(x):
