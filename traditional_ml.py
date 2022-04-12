@@ -7,32 +7,40 @@ from sklearn.metrics import confusion_matrix
 from time import time
 import random
 
-from load_data import load_mnist, load_kannada
+from load_data import load_datasets
 
-mnist_dataset = load_mnist()
-kannada_dataset = load_kannada()
+# load the datasets
+datasets = load_datasets()
 
-(total_x_train, total_y_train), (total_x_test, total_y_test) = mnist_dataset.get_data()
-for (x_train, y_train), (x_test, y_test) in [kannada_dataset.get_data()]:
-    total_x_train = np.concatenate((total_x_train, x_train))
-    total_y_train = np.concatenate((total_y_train, y_train))
-    total_x_test = np.concatenate((total_x_test, x_test))
-    total_y_test = np.concatenate((total_y_test, y_test))
+# get the train and test data
+X_train = np.concatenate([dataset.get_X_train(flatten=True) for dataset in datasets.values()])
+y_train = np.concatenate([dataset.get_y_train() for dataset in datasets.values()])
+X_test = np.concatenate([dataset.get_X_test(flatten=True) for dataset in datasets.values()])
+y_test = np.concatenate([dataset.get_y_test() for dataset in datasets.values()])
 
-total_x_train, total_y_train = shuffle(total_x_train, total_y_train)
-total_x_test, total_y_test = shuffle(total_x_test, total_y_test)
+# shuffle the data
+X_train, y_train = shuffle(X_train, y_train)
+X_test, y_test = shuffle(X_test, y_test)
 
-# clf = MultiOutputClassifier(KNeighborsClassifier()).fit(total_x_train, total_y_train)
-clf = MultiOutputClassifier(MLPClassifier(solver='adam', alpha=1e-4, hidden_layer_sizes=(10, 5),
-                                          random_state=1, verbose=10, max_iter=40))\
-    .fit(total_x_train, total_y_train)
+# build and train the classifier
+clf = MultiOutputClassifier(KNeighborsClassifier()).fit(X_train, y_train)
+# clf = MultiOutputClassifier(
+#     MLPClassifier(
+#         solver='adam',
+#         alpha=1e-4,
+#         hidden_layer_sizes=(10, 5),
+#         random_state=1,
+#         verbose=10,
+#         max_iter=40)).fit(X_train, y_train)
 
+# predict
 print('Starting prediction')
 start = time()
-y_pred = clf.predict(total_x_test[:500])
+y_pred = clf.predict(X_test[:500])
 print(f'Finished prediction in {time() - start}s')
-y_true = total_y_test[:500]
+y_true = y_test[:500]
 
+# confusion matrices
 print('Language')
 print(confusion_matrix(y_true[:, 0], y_pred[:, 0]))
 print()

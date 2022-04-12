@@ -5,27 +5,24 @@ import cv2
 ARABIC = 'arabic'
 KANNADA = 'kannada'
 ODIA = 'odia'
-DATASETS = [ARABIC, KANNADA, ODIA]
+DATASETS = [ARABIC, KANNADA]#, ODIA]
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-MNIST_PATH = os.path.join(DATA_DIR, f'{ARABIC}/mnist.npz')
+ARABIC_PATH = os.path.join(DATA_DIR, f'{ARABIC}/mnist.npz')
 KANNADA_DIR = os.path.join(DATA_DIR, KANNADA)
 
 
 class Dataset:
 
-    def __init__(self, x_train, y_train, x_test, y_test, language):
-        self.x_train = x_train
+    def __init__(self, X_train, y_train, X_test, y_test, language):
+        self.X_train = X_train
         self.y_train = y_train
-        self.x_test = x_test
+        self.X_test = X_test
         self.y_test = y_test
         self.language = language
 
-        self.x_train = self._equalize(self.x_train)
-        self.x_test = self._equalize(self.x_test)
-
-        self.x_train = self._flatten(self.x_train)
-        self.x_test = self._flatten(self.x_test)
+        self.X_train = self._equalize(self.X_train)
+        self.X_test = self._equalize(self.X_test)
 
         self.y_train = self._add_language_to_label(y_train)
         self.y_test = self._add_language_to_label(y_test)
@@ -42,51 +39,48 @@ class Dataset:
         y = np.vstack((np.full(len(y), language_num), y.T)).T
         return y
 
-    def get_data(self):
-        return (self.x_train, self.y_train), (self.x_test, self.y_test)
+    def get_X_train(self, flatten=False):
+        if flatten:
+            return self._flatten(self.X_train)
+        return self.X_train
+
+    def get_y_train(self):
+        return self.y_train
+
+    def get_X_test(self, flatten=False):
+        if flatten:
+            return self._flatten(self.X_test)
+        return self.X_test
+
+    def get_y_test(self):
+        return self.y_test
 
 
+def load_arabic():
+    with np.load(ARABIC_PATH) as f:
+        X_train, y_train = f['x_train'], f['y_train']
+        X_test, y_test = f['x_test'], f['y_test']
 
-# def add_language_to_label(y, language):
-#     language_num = DATASETS.index(language)
-#     y = np.vstack((np.full(len(y), language_num), y.T)).T
-#     return y
-
-
-def load_mnist():
-    with np.load(MNIST_PATH) as f:
-        x_train, y_train = f['x_train'], f['y_train']
-        x_test, y_test = f['x_test'], f['y_test']
-
-        return Dataset(x_train, y_train, x_test, y_test, ARABIC)
-
-        # x_train.reshape((len(x_train), -1))
-        # x_test.reshape((len(x_test), -1))
-        #
-        # y_train = add_language_to_label(y_train, MNIST)
-        # y_test = add_language_to_label(y_test, MNIST)
-        #
-        # return (x_train, y_train), (x_test, y_test)
+        return Dataset(X_train, y_train, X_test, y_test, ARABIC)
 
 
 def load_kannada():
-    x_train = np.load(os.path.join(KANNADA_DIR, 'X_kannada_MNIST_train.npz'))['arr_0']
-    x_test = np.load(os.path.join(KANNADA_DIR, 'X_kannada_MNIST_test.npz'))['arr_0']
+    X_train = np.load(os.path.join(KANNADA_DIR, 'X_kannada_MNIST_train.npz'))['arr_0']
+    X_test = np.load(os.path.join(KANNADA_DIR, 'X_kannada_MNIST_test.npz'))['arr_0']
     y_train = np.load(os.path.join(KANNADA_DIR, 'y_kannada_MNIST_train.npz'))['arr_0']
     y_test = np.load(os.path.join(KANNADA_DIR, 'y_kannada_MNIST_test.npz'))['arr_0']
 
-    return Dataset(x_train, y_train, x_test, y_test, KANNADA)
+    return Dataset(X_train, y_train, X_test, y_test, KANNADA)
 
-    # x_train.reshape((len(x_train), -1))
-    # x_test.reshape((len(x_test), -1))
-    #
-    # y_train = add_language_to_label(y_train, KANNADA)
-    # y_test = add_language_to_label(y_test, KANNADA)
-    #
-    # return (x_train, y_train), (x_test, y_test)
+
+def load_datasets():
+    return {
+        ARABIC: load_arabic(),
+        KANNADA: load_kannada()
+    }
 
 
 if __name__ == '__main__':
-    mnist = load_mnist()
+    mnist = load_arabic()
     kannada = load_kannada()
     x=1
