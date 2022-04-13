@@ -44,10 +44,17 @@ def read_numerals_and_save():
     for filename in os.listdir(SCAN_DIR):
         if 'template' in filename:
             continue
+
         # read in the scan
         scan = cv2.imread(os.path.join(SCAN_DIR, filename), cv2.IMREAD_GRAYSCALE)
 
         for region in regions:
+
+            # filter out image that was messed up when writing
+            if numeral_image_num == 422:
+                numeral_image_num += 1
+                continue
+
             # get the bounding box of where the numeral should be
             bbox = region.bbox
             bbox_height = bbox[2] - bbox[0] + 1
