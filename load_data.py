@@ -5,11 +5,12 @@ import cv2
 ARABIC = 'arabic'
 KANNADA = 'kannada'
 ODIA = 'odia'
-DATASETS = [ARABIC, KANNADA]#, ODIA]
+DATASETS = [ARABIC, KANNADA, ODIA]
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 ARABIC_PATH = os.path.join(DATA_DIR, f'{ARABIC}/mnist.npz')
 KANNADA_DIR = os.path.join(DATA_DIR, KANNADA)
+ODIA_DIR = os.path.join(DATA_DIR, f'{ODIA}/images')
 
 
 class Dataset:
@@ -73,14 +74,25 @@ def load_kannada():
     return Dataset(X_train, y_train, X_test, y_test, KANNADA)
 
 
+def load_odia():
+    X_train = np.load(os.path.join(ODIA_DIR, 'X_train.npy'))
+    X_test = np.load(os.path.join(ODIA_DIR, 'X_test.npy'))
+    y_train = np.load(os.path.join(ODIA_DIR, 'y_train.npy'))
+    y_test = np.load(os.path.join(ODIA_DIR, 'y_test.npy'))
+
+    return Dataset(X_train, y_train, X_test, y_test, ODIA)
+
+
 def load_datasets():
     return {
         ARABIC: load_arabic(),
-        KANNADA: load_kannada()
+        KANNADA: load_kannada(),
+        ODIA: load_odia()
     }
 
 
 if __name__ == '__main__':
     mnist = load_arabic()
     kannada = load_kannada()
+    odia = load_odia()
     x=1

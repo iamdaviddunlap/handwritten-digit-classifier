@@ -36,9 +36,9 @@ clf = MultiOutputClassifier(KNeighborsClassifier()).fit(X_train, y_train)
 # predict
 print('Starting prediction')
 start = time()
-y_pred = clf.predict(X_test[:500])
+y_pred = clf.predict(X_test)
 print(f'Finished prediction in {time() - start}s')
-y_true = y_test[:500]
+y_true = y_test
 
 # confusion matrices
 print('Language')
