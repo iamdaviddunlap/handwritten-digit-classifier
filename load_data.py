@@ -19,14 +19,15 @@ ODIA_DIR = os.path.join(DATA_DIR, f'{ODIA}/images')
 class Dataset:
 
     def __init__(self, X_train, y_train, X_test, y_test, language):
-        self.X_train = StandardScaler().fit_transform(X_train)
+        scaler = StandardScaler()
+        self.X_train = self._unflatten(scaler.fit_transform(self._flatten(X_train)))
         self.y_train = y_train
-        self.X_test = StandardScaler().fit_transform(X_test)
+        self.X_test = self._unflatten(scaler.transform(self._flatten(X_test)))
         self.y_test = y_test
         self.language = language
 
-        self.X_train = self._equalize(self.X_train)
-        self.X_test = self._equalize(self.X_test)
+        # self.X_train = self._equalize(self.X_train)
+        # self.X_test = self._equalize(self.X_test)
 
         self.y_train = self._add_language_to_label(y_train)
         self.y_test = self._add_language_to_label(y_test)
@@ -38,6 +39,10 @@ class Dataset:
     @staticmethod
     def _flatten(x):
         return x.reshape((len(x), -1))
+
+    @staticmethod
+    def _unflatten(x):
+        return x.reshape((len(x), 28, 28))
 
     def _add_language_to_label(self, y):
         language_num = DATASETS.index(self.language)
