@@ -1,6 +1,8 @@
 import numpy as np
 import os
 import cv2
+import torch
+from sklearn.utils import shuffle
 
 ARABIC = 'arabic'
 KANNADA = 'kannada'
@@ -83,7 +85,7 @@ def load_odia():
     return Dataset(X_train, y_train, X_test, y_test, ODIA)
 
 
-def load_datasets():
+def get_dataset_dict():
     return {
         ARABIC: load_arabic(),
         KANNADA: load_kannada(),
@@ -91,8 +93,45 @@ def load_datasets():
     }
 
 
+def load_data(flatten=False):
+    # load the datasets
+    datasets = get_dataset_dict()
+
+    # get the train and test data
+    X_train = np.concatenate([dataset.get_X_train(flatten=flatten) for dataset in datasets.values()])
+    y_train = np.concatenate([dataset.get_y_train() for dataset in datasets.values()])
+    X_test = np.concatenate([dataset.get_X_test(flatten=flatten) for dataset in datasets.values()])
+    y_test = np.concatenate([dataset.get_y_test() for dataset in datasets.values()])
+
+    # shuffle the data
+    X_train, y_train = shuffle(X_train, y_train)
+    X_test, y_test = shuffle(X_test, y_test)
+
+    return (X_train, y_train), (X_test, y_test)
+
+
+class PyTorchDataset(torch.utils.data.Dataset):
+    def __init__(self, X, y):
+        self.X = torch.Tensor(np.expand_dims(X, axis=1))
+        self.y = torch.Tensor(y)
+
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.y[idx]
+
+
+
+def load_dataloaders():
+    (X_train, y_train), (X_test, y_test) = load_data()
+    train_loader = torch.utils.data.DataLoader(PyTorchDataset(X_train, y_train), batch_size=32, num_workers=8)
+    test_loader = torch.utils.data.DataLoader(PyTorchDataset(X_test, y_test), batch_size=32, num_workers=8)
+
+    return train_loader, test_loader
+
+
 if __name__ == '__main__':
     mnist = load_arabic()
     kannada = load_kannada()
     odia = load_odia()
-    x=1

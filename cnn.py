@@ -6,7 +6,8 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 import os
 
-from load_data import load_datasets
+from evaluate import evaluate
+from load_data import load_data, load_dataloaders
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 TRAIN = False
@@ -51,18 +52,6 @@ class CNN(nn.Module):
         return language, numeral
 
 
-class PyTorchDataset(torch.utils.data.Dataset):
-    def __init__(self, X, y):
-        self.X = torch.Tensor(np.expand_dims(X, axis=1))
-        self.y = torch.Tensor(y)
-
-    def __len__(self):
-        return len(self.X)
-
-    def __getitem__(self, idx):
-        return self.X[idx], self.y[idx]
-
-
 def train(model, dataloader, num_epochs) -> CNN:
 
     loss_fn = torch.nn.CrossEntropyLoss()
@@ -87,46 +76,35 @@ def train(model, dataloader, num_epochs) -> CNN:
         print(np.mean(losses))
         torch.save(model.state_dict(), "model.pickle")
 
-    return model
+
+def predict(model, images):
+    images = images.to(DEVICE).float()
+
+    with torch.no_grad():
+        language_pred, numeral_pred = model(images.to(DEVICE))
+
+    language_pred = torch.softmax(language_pred, dim=1)
+    numeral_pred = torch.softmax(numeral_pred, dim=1)
+
+    language_pred = list(torch.argmax(language_pred, dim=1).numpy())
+    numeral_pred = list(torch.argmax(numeral_pred, dim=1).numpy())
+
+    return list(zip(language_pred, numeral_pred))
 
 
 def main():
-    # load the datasets
-    datasets = load_datasets()
-
-    # get the train and test data
-    X_train = np.concatenate([dataset.get_X_train() for dataset in datasets.values()])
-    y_train = np.concatenate([dataset.get_y_train() for dataset in datasets.values()])
-    X_test = np.concatenate([dataset.get_X_test() for dataset in datasets.values()])
-    y_test = np.concatenate([dataset.get_y_test() for dataset in datasets.values()])
-
-    # shuffle the data
-    X_train, y_train = shuffle(X_train, y_train)
-    X_test, y_test = shuffle(X_test, y_test)
-
-    train_loader = torch.utils.data.DataLoader(PyTorchDataset(X_train, y_train), batch_size=32, num_workers=8)
-    test_loader = torch.utils.data.DataLoader(PyTorchDataset(X_test, y_test), batch_size=32, num_workers=8)
+    train_loader, test_loader = load_dataloaders()
 
     if TRAIN:
         model = CNN().to(DEVICE)
-        model = train(model, train_loader, num_epochs=30)
+        train(model, train_loader, num_epochs=30)
     else:
         model = load_model()
         y_pred = list()
-        for image, label in tqdm(test_loader, total=len(test_loader)):
-            image = image.to(DEVICE).float()
-            label = label.to(DEVICE).float()
+        for images, _ in tqdm(test_loader, total=len(test_loader)):
+            y_pred.extend(predict(model, images))
 
-            with torch.no_grad():
-                language_pred, numeral_pred = model(image.to(DEVICE))
-
-            language_pred = torch.softmax(language_pred, dim=1)
-            numeral_pred = torch.softmax(numeral_pred, dim=1)
-
-            language_pred = list(torch.argmax(language_pred, dim=1).numpy())
-            numeral_pred = list(torch.argmax(numeral_pred, dim=1).numpy())
-
-            y_pred.extend(list(zip(language_pred, numeral_pred)))
+        evaluate(y_true=test_loader.dataset.y.numpy(), y_pred=np.array(y_pred))
 
 
 if __name__ == "__main__":
