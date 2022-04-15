@@ -3,3 +3,5 @@ scikit-learn
 scikit-image
 opencv-python
 matplotlib
+torch
+tqdm
