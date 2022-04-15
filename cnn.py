@@ -105,13 +105,13 @@ def main():
     else:
         model = load_model()
         if not model:
-            y_pred = list()
-            for images, _ in tqdm(test_loader, total=len(test_loader)):
-                y_pred.extend(predict(model, images))
-        else:
             raise FileNotFoundError('There is no model file to load')
 
-            evaluate(y_true=test_loader.dataset.y.numpy(), y_pred=np.array(y_pred))
+        y_pred = list()
+        for images, _ in tqdm(test_loader, total=len(test_loader)):
+            y_pred.extend(predict(model, images))
+
+        evaluate(y_true=test_loader.dataset.y.numpy(), y_pred=np.array(y_pred))
 
 
 if __name__ == "__main__":
