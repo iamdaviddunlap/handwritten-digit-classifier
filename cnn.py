@@ -42,8 +42,8 @@ class CNN(nn.Module):
         x = self.pool(F.relu(self.conv1(x)))
         x = torch.flatten(x, 1)  # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
-        language = F.softmax(self.fc_language(x), dim=1)
-        numeral = F.softmax(self.fc_numeral(x), dim=1)
+        language = self.fc_language(x)
+        numeral = self.fc_numeral(x)
         return language, numeral
 
 
@@ -79,8 +79,8 @@ def predict(model, images):
     with torch.no_grad():
         language_pred, numeral_pred = model(images.to(DEVICE))
 
-    # language_pred = torch.softmax(language_pred, dim=1)
-    # numeral_pred = torch.softmax(numeral_pred, dim=1)
+    language_pred = torch.softmax(language_pred, dim=1)
+    numeral_pred = torch.softmax(numeral_pred, dim=1)
 
     language_pred = list(torch.argmax(language_pred, dim=1).cpu().detach().numpy())
     numeral_pred = list(torch.argmax(numeral_pred, dim=1).cpu().detach().numpy())
