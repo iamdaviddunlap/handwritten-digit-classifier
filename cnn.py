@@ -50,7 +50,7 @@ class CNN(nn.Module):
 def train(model, dataloader, num_epochs) -> CNN:
 
     loss_fn = torch.nn.CrossEntropyLoss()
-    lr = 1e-3
+    lr = 5e-4
     print(f'lr = {lr}')
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -91,19 +91,27 @@ def predict(model, images):
 def main():
     train_loader, test_loader = load_dataloaders()
 
+    LOAD_MODEL = False
+
     if TRAIN:
-        model = load_model()
-        if not model:
+        if LOAD_MODEL:
+            model = load_model()
+            if not model:
+                model = CNN()
+        else:
             model = CNN()
         model.to(DEVICE)
         train(model, train_loader, num_epochs=30)
     else:
         model = load_model()
-        y_pred = list()
-        for images, _ in tqdm(test_loader, total=len(test_loader)):
-            y_pred.extend(predict(model, images))
+        if not model:
+            y_pred = list()
+            for images, _ in tqdm(test_loader, total=len(test_loader)):
+                y_pred.extend(predict(model, images))
+        else:
+            raise FileNotFoundError('There is no model file to load')
 
-        evaluate(y_true=test_loader.dataset.y.numpy(), y_pred=np.array(y_pred))
+            evaluate(y_true=test_loader.dataset.y.numpy(), y_pred=np.array(y_pred))
 
 
 if __name__ == "__main__":
