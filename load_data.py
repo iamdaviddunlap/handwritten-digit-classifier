@@ -2,6 +2,7 @@ import numpy as np
 import os
 import cv2
 import torch
+from sklearn.preprocessing import StandardScaler
 from sklearn.utils import shuffle
 
 ARABIC = 'arabic'
@@ -18,9 +19,9 @@ ODIA_DIR = os.path.join(DATA_DIR, f'{ODIA}/images')
 class Dataset:
 
     def __init__(self, X_train, y_train, X_test, y_test, language):
-        self.X_train = (X_train / 255).astype(np.uint8)
+        self.X_train = StandardScaler().fit_transform(X_train)
         self.y_train = y_train
-        self.X_test = (X_test / 255).astype(np.uint8)
+        self.X_test = StandardScaler().fit_transform(X_test)
         self.y_test = y_test
         self.language = language
 
