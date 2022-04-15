@@ -18,9 +18,9 @@ ODIA_DIR = os.path.join(DATA_DIR, f'{ODIA}/images')
 class Dataset:
 
     def __init__(self, X_train, y_train, X_test, y_test, language):
-        self.X_train = X_train
+        self.X_train = (X_train / 255).astype(np.uint8)
         self.y_train = y_train
-        self.X_test = X_test
+        self.X_test = (X_test / 255).astype(np.uint8)
         self.y_test = y_test
         self.language = language
 
@@ -30,7 +30,8 @@ class Dataset:
         self.y_train = self._add_language_to_label(y_train)
         self.y_test = self._add_language_to_label(y_test)
 
-    def _equalize(self, x):
+    @staticmethod
+    def _equalize(x):
         return np.array([cv2.equalizeHist(image) for image in x])
 
     @staticmethod
