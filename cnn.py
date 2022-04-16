@@ -2,19 +2,19 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.utils import shuffle
+from torchvision import models
 from tqdm import tqdm
 import os
 
 from evaluate import evaluate
-from load_data import load_data, load_dataloaders
+from load_data import load_dataloaders
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 TRAIN = True
 
 
 def load_model():
-    model = CNN().to(DEVICE)
+    model = MODEL().to(DEVICE)
     model_path = os.path.join(os.path.dirname(__file__), 'model.pickle')
     if os.path.exists(model_path):
         with open(model_path, 'rb') as f:
@@ -47,13 +47,29 @@ class CNN(nn.Module):
         return language, numeral
 
 
+class ResnetCNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.resnet = models.resnet18(pretrained=True)
+        self.resnet.conv1 = nn.Conv2d(1, 64, 3)
+        self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 16)
+        self.fc_language = nn.Linear(16, 3)
+        self.fc_numeral = nn.Linear(16, 10)
+
+    def forward(self, x):
+        x = self.resnet(x)
+        language = self.fc_language(x)
+        numeral = self.fc_numeral(x)
+        return language, numeral
+
+
 def train(model, dataloader, num_epochs):
 
     loss_fn = torch.nn.CrossEntropyLoss()
     lr = 1e-3
     print(f'lr = {lr}')
     model.train()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(model.resnet.parameters(), lr=lr)
 
     for epoch in range(num_epochs):
         print(f"EPOCH: {epoch}")
@@ -70,7 +86,7 @@ def train(model, dataloader, num_epochs):
             losses.append(loss.detach().cpu().numpy())
             optimizer.step()
         print(np.mean(losses))
-        torch.save(model.state_dict(), "model.pickle")
+        torch.save(model.state_dict(), PICKLE_NAME)
 
 
 def predict(model, images):
@@ -97,9 +113,9 @@ def main():
         if LOAD_MODEL:
             model = load_model()
             if not model:
-                model = CNN()
+                model = MODEL()
         else:
-            model = CNN()
+            model = MODEL()
         model.to(DEVICE)
         train(model, train_loader, num_epochs=30)
     else:
@@ -113,6 +129,9 @@ def main():
 
         evaluate(y_true=test_loader.dataset.y.numpy(), y_pred=np.array(y_pred))
 
+
+MODEL = ResnetCNN
+PICKLE_NAME = 'model_resnet.pickle' if MODEL == ResnetCNN else 'model.pickle'
 
 if __name__ == "__main__":
     main()
