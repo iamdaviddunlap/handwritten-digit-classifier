@@ -15,6 +15,11 @@ ARABIC_PATH = os.path.join(DATA_DIR, f'{ARABIC}/mnist.npz')
 KANNADA_DIR = os.path.join(DATA_DIR, KANNADA)
 ODIA_DIR = os.path.join(DATA_DIR, f'{ODIA}/images')
 
+LABEL_TO_NAME = dict()
+for language_idx in range(len(DATASETS)):
+    for numeral in range(10):
+        LABEL_TO_NAME[(language_idx, numeral)] = f'{DATASETS[language_idx]} {numeral}'
+
 
 class Dataset:
 
