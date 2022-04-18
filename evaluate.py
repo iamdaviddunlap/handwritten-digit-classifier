@@ -30,7 +30,7 @@ def evaluate(y_true, y_pred):
     print()
     for numeral in range(10):
         print(numeral)
-        indices = np.where((y_pred[:, 1] == numeral) | (y_true[:, 1] == numeral))
+        indices = np.where((y_pred[:, 1] == numeral) & (y_true[:, 1] == numeral))
         language_pred = y_pred[indices, 0].squeeze()
         language_true = y_true[indices, 0].squeeze()
         print(confusion_matrix(language_true, language_pred))

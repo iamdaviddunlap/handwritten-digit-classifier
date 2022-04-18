@@ -84,7 +84,10 @@ def train(model, dataloader, num_epochs):
     lr = 1e-3
     print(f'lr = {lr}')
     model.train()
-    optimizer = torch.optim.Adam(model.pretrained_model.parameters(), lr=lr)
+    if isinstance(MODEL, CNN):
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    else:
+        optimizer = torch.optim.Adam(model.pretrained_model.parameters(), lr=lr)
 
     for epoch in range(num_epochs):
         print(f"EPOCH: {epoch}")
@@ -146,14 +149,15 @@ def main():
 
 
 if __name__ == "__main__":
-    MODEL = TransferCNN(TransferCNN.PretrainedModel.EFFICIENT_NET)
+    # MODEL = TransferCNN(TransferCNN.PretrainedModel.RESNET)
+    MODEL = CNN()
 
-    if MODEL.model_type == TransferCNN.PretrainedModel.RESNET:
+    if isinstance(MODEL, CNN):
+        pickle_name = 'model.pickle'
+    elif MODEL.model_type == TransferCNN.PretrainedModel.RESNET:
         pickle_name = 'model_resnet.pickle'
     elif MODEL.model_type == TransferCNN.PretrainedModel.EFFICIENT_NET:
         pickle_name = 'model_efficient_net.pickle'
-    else:
-        pickle_name = 'model.pickle'
 
     PICKLE_PATH = os.path.join(MODELS_DIR, pickle_name)
 
