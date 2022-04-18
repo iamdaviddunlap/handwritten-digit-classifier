@@ -10,13 +10,17 @@ from evaluate import evaluate
 from load_data import load_dataloaders
 from enum import Enum
 
+MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 TRAIN = True
+
+if not os.path.exists(MODELS_DIR):
+    os.makedirs(MODELS_DIR)
 
 
 def load_model():
     model = MODEL.to(DEVICE)
-    model_path = os.path.join(os.path.dirname(__file__), PICKLE_NAME)
+    model_path = os.path.join(os.path.dirname(__file__), PICKLE_PATH)
     if os.path.exists(model_path):
         with open(model_path, 'rb') as f:
             state_dict = torch.load(f, map_location=DEVICE)
@@ -97,7 +101,7 @@ def train(model, dataloader, num_epochs):
             losses.append(loss.detach().cpu().numpy())
             optimizer.step()
         print(np.mean(losses))
-        torch.save(model.state_dict(), PICKLE_NAME)
+        torch.save(model.state_dict(), PICKLE_PATH)
 
 
 def predict(model, images):
@@ -145,10 +149,12 @@ if __name__ == "__main__":
     MODEL = TransferCNN(TransferCNN.PretrainedModel.EFFICIENT_NET)
 
     if MODEL.model_type == TransferCNN.PretrainedModel.RESNET:
-        PICKLE_NAME = 'model_resnet.pickle'
+        pickle_name = 'model_resnet.pickle'
     elif MODEL.model_type == TransferCNN.PretrainedModel.EFFICIENT_NET:
-        PICKLE_NAME = 'model_efficient_net.pickle'
+        pickle_name = 'model_efficient_net.pickle'
     else:
-        PICKLE_NAME = 'model.pickle'
+        pickle_name = 'model.pickle'
+
+    PICKLE_PATH = os.path.join(MODELS_DIR, pickle_name)
 
     main()
