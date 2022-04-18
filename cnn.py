@@ -8,14 +8,15 @@ import os
 
 from evaluate import evaluate
 from load_data import load_dataloaders
+from enum import Enum
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 TRAIN = True
 
 
 def load_model():
-    model = MODEL().to(DEVICE)
-    model_path = os.path.join(os.path.dirname(__file__), 'model.pickle')
+    model = MODEL.to(DEVICE)
+    model_path = os.path.join(os.path.dirname(__file__), PICKLE_NAME)
     if os.path.exists(model_path):
         with open(model_path, 'rb') as f:
             state_dict = torch.load(f, map_location=DEVICE)
@@ -47,17 +48,27 @@ class CNN(nn.Module):
         return language, numeral
 
 
-class ResnetCNN(nn.Module):
-    def __init__(self):
+class TransferCNN(nn.Module):
+    class PretrainedModel(Enum):
+        RESNET = 1
+        EFFICIENT_NET = 2
+
+    def __init__(self, pretrained_model):
         super().__init__()
-        self.resnet = models.resnet18(pretrained=True)
-        self.resnet.conv1 = nn.Conv2d(1, 64, 3)
-        self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 16)
+        self.model_type = pretrained_model
+        if pretrained_model == self.PretrainedModel.RESNET:
+            self.pretrained_model = models.resnet18(pretrained=True)
+            self.pretrained_model.conv1 = nn.Conv2d(1, 64, 3)
+            self.pretrained_model.fc = nn.Linear(self.pretrained_model.fc.in_features, 16)
+        else:
+            self.pretrained_model = models.efficientnet_b0(pretrained=True)
+            self.pretrained_model.features[0][0] = nn.Conv2d(1, 32, 3)
+            self.pretrained_model.classifier[-1] = nn.Linear(self.pretrained_model.classifier[-1].in_features, 16)
         self.fc_language = nn.Linear(16, 3)
         self.fc_numeral = nn.Linear(16, 10)
 
     def forward(self, x):
-        x = self.resnet(x)
+        x = self.pretrained_model(x)
         language = self.fc_language(x)
         numeral = self.fc_numeral(x)
         return language, numeral
@@ -69,7 +80,7 @@ def train(model, dataloader, num_epochs):
     lr = 1e-3
     print(f'lr = {lr}')
     model.train()
-    optimizer = torch.optim.Adam(model.resnet.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(model.pretrained_model.parameters(), lr=lr)
 
     for epoch in range(num_epochs):
         print(f"EPOCH: {epoch}")
@@ -113,9 +124,9 @@ def main():
         if LOAD_MODEL:
             model = load_model()
             if not model:
-                model = MODEL()
+                model = MODEL
         else:
-            model = MODEL()
+            model = MODEL
         model.to(DEVICE)
         train(model, train_loader, num_epochs=30)
     else:
@@ -130,8 +141,14 @@ def main():
         evaluate(y_true=test_loader.dataset.y.numpy(), y_pred=np.array(y_pred))
 
 
-MODEL = ResnetCNN
-PICKLE_NAME = 'model_resnet.pickle' if MODEL == ResnetCNN else 'model.pickle'
-
 if __name__ == "__main__":
+    MODEL = TransferCNN(TransferCNN.PretrainedModel.EFFICIENT_NET)
+
+    if MODEL.model_type == TransferCNN.PretrainedModel.RESNET:
+        PICKLE_NAME = 'model_resnet.pickle'
+    elif MODEL.model_type == TransferCNN.PretrainedModel.EFFICIENT_NET:
+        PICKLE_NAME = 'model_efficient_net.pickle'
+    else:
+        PICKLE_NAME = 'model.pickle'
+
     main()
