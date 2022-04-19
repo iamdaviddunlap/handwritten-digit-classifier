@@ -21,13 +21,7 @@ TRAIN = False
 
 
 def main():
-    if CLF == KNN:
-        joblib_name = 'knn.joblib'
-    elif CLF == RANDOM_FOREST:
-        joblib_name = 'random_forest.joblib'
-    elif CLF == MLP:
-        joblib_name = 'mlp.joblib'
-
+    joblib_name = f'{CLF}.joblib'
     JOBLIB_PATH = os.path.join(MODELS_DIR, joblib_name)
 
     # load the data
@@ -56,13 +50,14 @@ def main():
         print(f'Output {joblib_name}')
     else:
         clf = load(JOBLIB_PATH)
+        print(f'Loaded {CLF}')
 
     # predict
     print('Predicting...')
     start = time()
-    y_pred = clf.predict(X_test)
+    y_pred = clf.predict(X_test[:1000])
     print(f'Finished prediction in {round(time() - start, 2)}s')
-    y_true = y_test
+    y_true = y_test[:1000]
 
     evaluate(y_true, y_pred)
 
