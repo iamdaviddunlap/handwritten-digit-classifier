@@ -12,12 +12,12 @@ from load_data import load_data
 
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 
-KNN = 'knn'
-RANDOM_FOREST = 'random_forest'
-MLP = 'mlp'
+KNN = 'KNeighborsClassifier'
+RANDOM_FOREST = 'RandomForestClassifier'
+MLP = 'MLPClassifier'
 
 CLF = KNN
-TRAIN = True
+TRAIN = False
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
 
     if TRAIN:
         # build and train the classifier
-        print('Training...')
+        print(f'Training {CLF}...')
 
         if CLF == KNN:
             clf = MultiOutputClassifier(KNeighborsClassifier())
@@ -53,6 +53,7 @@ def main():
 
         clf.fit(X_train, y_train)
         dump(clf, JOBLIB_PATH)
+        print(f'Output {joblib_name}')
     else:
         clf = load(JOBLIB_PATH)
 
