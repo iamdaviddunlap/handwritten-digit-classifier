@@ -102,6 +102,7 @@ def read_numerals_and_save():
             cv2.imwrite(image_save_path, crop)
             numeral_image_num += 1
 
+
 def augment(image):
     images = list()
 
@@ -125,6 +126,17 @@ def augment(image):
 
         images.append(scaled)
 
+        # plt.figure(dpi=100)
+        # plt.subplot(1, 2, 1)
+        # plt.imshow(image, cmap='gray')
+        # plt.title('Original')
+        # plt.subplot(1, 2, 2)
+        # plt.imshow(scaled, cmap='gray')
+        # plt.title('Scaled')
+        # plt.suptitle(f'Scale Factor: {round(1 / (1 - crop_percentage), 2)}')
+        # plt.show()
+        # break
+
     # translate
     image_temp = np.pad(image, image.shape)
     for _ in range(NUM_AUGS):
@@ -140,6 +152,18 @@ def augment(image):
 
         images.append(translated)
 
+        # plt.figure(dpi=100)
+        # plt.subplot(1, 2, 1)
+        # plt.imshow(image, cmap='gray')
+        # plt.title('Original')
+        # plt.subplot(1, 2, 2)
+        # plt.imshow(translated, cmap='gray')
+        # plt.title('Translated')
+        # plt.suptitle(f'Translation: ({round(-translate_values[0] * len(image), 2)}, '
+        #              f'{round(-translate_values[1] * len(image), 2)}) pixels')
+        # plt.show()
+        # break
+
     # rotate
     for _ in range(NUM_AUGS):
         # random positive or negative angle to rotate the numeral by
@@ -152,14 +176,16 @@ def augment(image):
 
         images.append(rotated)
 
-        # TODO get figures of augmentations
         # plt.figure(dpi=100)
         # plt.subplot(1, 2, 1)
         # plt.imshow(image, cmap='gray')
+        # plt.title('Original')
         # plt.subplot(1, 2, 2)
         # plt.imshow(rotated, cmap='gray')
-        # plt.suptitle(str(angle))
+        # plt.title('Rotated')
+        # plt.suptitle(f'Rotation angle: {round(angle, 2)} degrees')
         # plt.show()
+        # break
 
     return images
 
