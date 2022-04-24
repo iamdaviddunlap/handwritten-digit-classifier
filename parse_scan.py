@@ -1,3 +1,7 @@
+""""
+File to parse scans of handwritten digits, apply data augmentations.
+"""
+
 import cv2
 import random
 from skimage import measure
@@ -5,7 +9,6 @@ import numpy as np
 import os
 from scipy import ndimage
 import shutil
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 

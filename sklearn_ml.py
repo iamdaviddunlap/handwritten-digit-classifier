@@ -1,3 +1,7 @@
+"""
+An implementation of various machine learning models using sci-kit learn.
+"""
+
 import os
 
 from joblib import dump, load
@@ -11,26 +15,32 @@ from evaluate import evaluate
 from load_data import load_data
 
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
+if not os.path.exists(MODELS_DIR):
+    os.makedirs(MODELS_DIR)
 
 KNN = 'KNeighborsClassifier'
 RANDOM_FOREST = 'RandomForestClassifier'
 MLP = 'MLPClassifier'
 
+# Change these as appropriate
 CLF = KNN
-TRAIN = False
+TRAIN = True
 
 
 def main():
+    # path to the saved model (or model to save)
     joblib_name = f'{CLF}.joblib'
     JOBLIB_PATH = os.path.join(MODELS_DIR, joblib_name)
 
     # load the data
     (X_train, y_train), (X_test, y_test) = load_data(flatten=True)
 
+    # train and eval or only eval
     if TRAIN:
         # build and train the classifier
         print(f'Training {CLF}...')
 
+        # instantiate the classifier
         if CLF == KNN:
             clf = MultiOutputClassifier(KNeighborsClassifier())
         elif CLF == RANDOM_FOREST:
@@ -45,20 +55,25 @@ def main():
                     verbose=10,
                     max_iter=40))
 
+        # train the classifier
         clf.fit(X_train, y_train)
+
+        # save the model
         dump(clf, JOBLIB_PATH)
         print(f'Output {joblib_name}')
     else:
+        # load the model
         clf = load(JOBLIB_PATH)
         print(f'Loaded {CLF}')
 
     # predict
     print('Predicting...')
     start = time()
-    y_pred = clf.predict(X_test[:1000])
+    y_pred = clf.predict(X_test)
     print(f'Finished prediction in {round(time() - start, 2)}s')
-    y_true = y_test[:1000]
+    y_true = y_test
 
+    # evaluate the model
     evaluate(y_true, y_pred)
 
 

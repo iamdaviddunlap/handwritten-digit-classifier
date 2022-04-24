@@ -1,3 +1,7 @@
+"""
+File for training and evaluate several CNN models using PyTorch.
+"""
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -30,6 +34,8 @@ def load_model():
     else:
         return None
 
+
+# different models
 
 class CNN(nn.Module):
     def __init__(self):
@@ -78,6 +84,8 @@ class TransferCNN(nn.Module):
         return language, numeral
 
 
+# multiple epochs over the dataset
+
 def train(model, dataloader, num_epochs):
 
     loss_fn = torch.nn.CrossEntropyLoss()
@@ -108,14 +116,17 @@ def train(model, dataloader, num_epochs):
 
 
 def predict(model, images):
+    # predict multiple images
     images = images.to(DEVICE).float()
 
     with torch.no_grad():
         language_pred, numeral_pred = model(images.to(DEVICE))
 
+    # apply softmax
     language_pred = torch.softmax(language_pred, dim=1)
     numeral_pred = torch.softmax(numeral_pred, dim=1)
 
+    # get the final prediction
     language_pred = list(torch.argmax(language_pred, dim=1).cpu().detach().numpy())
     numeral_pred = list(torch.argmax(numeral_pred, dim=1).cpu().detach().numpy())
 
@@ -123,6 +134,8 @@ def predict(model, images):
 
 
 def main():
+    # load/instantiate the correct model
+
     train_loader, test_loader = load_dataloaders()
 
     LOAD_MODEL = False
@@ -145,11 +158,11 @@ def main():
         for images, _ in tqdm(test_loader, total=len(test_loader)):
             y_pred.extend(predict(model, images))
 
+        # evaluate
         evaluate(y_true=test_loader.dataset.y.numpy(), y_pred=np.array(y_pred))
 
 
 if __name__ == "__main__":
-    # MODEL = TransferCNN(TransferCNN.PretrainedModel.RESNET)
     MODEL = CNN()
 
     if isinstance(MODEL, CNN):

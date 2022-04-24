@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
+from sklearn.metrics import precision_recall_fscore_support
 
 from load_data import LABEL_TO_NAME, DATASETS
 
@@ -9,6 +9,7 @@ pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", None)
 pd.set_option("display.max_colwidth", None)
+
 
 def scores(y_true, y_pred, labels):
     df_confusion = pd.crosstab(pd.Series(y_true), pd.Series(y_pred),
@@ -32,7 +33,7 @@ def scores(y_true, y_pred, labels):
 
 def evaluate(y_true, y_pred):
     # confusion matrices
-    
+
     print('All')
     y_true_label = [LABEL_TO_NAME[tuple(label)] for label in y_true]
     y_pred_label = [LABEL_TO_NAME[tuple(label)] for label in y_pred]
